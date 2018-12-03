@@ -1,0 +1,6 @@
+terminology_bot/tmp
+venv
+.idea
+
+terminology_bot/config.mine.ini
+terminology_bot/__pycache__/
