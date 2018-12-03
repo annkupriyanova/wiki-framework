@@ -7,8 +7,8 @@ def get_config(section='postgresql', filename='config.ini'):
     Parses config.ini file
     :return: parameters from the required section of config.ini file
     """
-    if os.path.basename(os.getcwd()) == 'term_bot':
-        os.chdir('./terminology_bot')
+    config_path = os.path.dirname(os.path.realpath(__file__))
+    os.chdir(config_path)
 
     if os.path.exists('config.mine.ini'):
         filename = 'config.mine.ini'
