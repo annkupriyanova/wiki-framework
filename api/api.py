@@ -7,4 +7,4 @@ page = site.Pages['New']
 text = page.text()
 text += "* [[:" + 'New page' + "]]\n"
 
-page.save(text, summary='Creating next page')
+page.save(text, summary='Creating new page')
