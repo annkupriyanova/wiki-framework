@@ -1,5 +1,6 @@
 import logging
 import hashlib
+import gettext
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
                           ConversationHandler)
@@ -9,6 +10,9 @@ from term_collection import TermCollection
 from database import POSEnum
 
 
+t = gettext.translation('terminology_bot', '/usr/share/locale')
+_ = t.gettext
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO)
 
@@ -16,15 +20,21 @@ logger = logging.getLogger(__name__)
 params = get_config(section='bot')
 
 
+new_term_opt, list_term_opt = (_('Add new term'), _('Get list of terms'))
+pos_tag_opt, description_opt = (_('POS-tag'), _('Description'))
+synonyms_opt, similars_opt = (_('Synonyms'), _('Similar words'))
+image_opt, audio_opt, video_opt = (_('Image'), _('Audio'), _('Video'))
+
+
 class Bot:
     START_MENU, CHOOSE_TERM, NEW_TERM, CHOOSE_OPTION, \
     POS, DESCRIPTION, SYNONYMS, SIMILARS, IMAGE, AUDIO, VIDEO = range(11)
 
-    reply_start_keyboard = ReplyKeyboardMarkup([['Add new term'], ['Get list of terms']], resize_keyboard=True)
+    reply_start_keyboard = ReplyKeyboardMarkup([[new_term_opt], [list_term_opt]], resize_keyboard=True)
     reply_menu_keyboard = ReplyKeyboardMarkup(
-        [['POS-tag', 'Description'],
-         ['Synonyms', 'Similar words'],
-         ['Image', 'Audio', 'Video']],
+        [[pos_tag_opt, description_opt],
+         [synonyms_opt, similars_opt],
+         [image_opt, audio_opt, video_opt]],
         resize_keyboard=True
     )
 
@@ -39,7 +49,7 @@ class Bot:
         Sends the greeting message with the start menu: 'Add new term' and 'Get list of terms' options
         :return: the state START_MENU
         """
-        update.message.reply_text('Hello! I am Terminology Bot. Send /cancel to stop talking to me.',
+        update.message.reply_text(_('Hello! I am Terminology Bot. Send /cancel to stop talking to me.'),
                                   reply_markup=self.reply_start_keyboard)
         return self.START_MENU
 
@@ -48,7 +58,7 @@ class Bot:
         Callback function for the user choosing 'Add new term' option
         :return: the state NEW_TERM
         """
-        update.message.reply_text('Type in the term.', reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text(_('Type in the term.'), reply_markup=ReplyKeyboardRemove())
         return self.NEW_TERM
 
     def add_new_term(self, bot, update):
@@ -63,7 +73,7 @@ class Bot:
 
         self.term_collection.create(term_name)
 
-        update.message.reply_text('I\'ll remember this term.',
+        update.message.reply_text(_('I\'ll remember this term.'),
                                   reply_markup=self.reply_start_keyboard)
 
         return self.START_MENU
@@ -75,13 +85,13 @@ class Bot:
         :return: the state CHOOSE_TERM
         """
         terms = self.term_collection.get_terms()
+        terms_list = [f'{i+1}. {terms[i]}' for i in range(len(terms))]
 
-        text = 'These are the terms I know:\n'
+        text_list = [_('These are the terms I know:')]
+        text_list.extend(terms_list)
+        text_list.append(_('\nPlease, choose one of them.'))
 
-        for i, term in enumerate(terms):
-            text += f'{i+1}. {term}\n'
-
-        text += '\nPlease, choose one of them.'
+        text = '\n'.join(text_list)
 
         update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
 
@@ -99,17 +109,18 @@ class Bot:
 
             logger.info('User %s chose the term "%s"', user.first_name, self.cur_term.name)
 
-            # update.message.reply_text(f'Let\'s make the profile of the term "{self.cur_term.name}".',
-            #                           reply_markup=self.reply_menu_keyboard)
+            text = _('Let\'s make the profile of the term "{}".\n'
+                     'Feel free to go back to the /menu and to the list of /terms.'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=self.reply_menu_keyboard)
 
-            profile = self.get_term_profile()
-            update.message.reply_text(f'{self.cur_term.name.capitalize()}:\n{profile}',
-                                      reply_markup=self.reply_menu_keyboard)
+            # profile = self.get_term_profile()
+            # update.message.reply_text(f'{self.cur_term.name.capitalize()}:\n{profile}',
+            #                           reply_markup=self.reply_menu_keyboard)
 
             return self.CHOOSE_OPTION
 
         except (IndexError, ValueError):
-            text = 'Please choose an index number of a term from the list above.'
+            text = _('Please choose an index number of a term from the list above.')
             update.message.reply_text(text)
             return self.CHOOSE_TERM
 
@@ -121,43 +132,46 @@ class Bot:
         option = update.message.text
         if option == 'POS-tag':
             reply_keyboard = [POSEnum.__members__.keys()]
-            update.message.reply_text(
-                f'Choose the part-of-speech tag for the term "{self.cur_term.name}".\n'
-                'Feel free to go back to the /menu.',
-                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
+            text = _('Choose the part-of-speech tag for the term "{}".'.format(self.cur_term.name))
+
+            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+                                                                             one_time_keyboard=True,
+                                                                             resize_keyboard=True))
             return self.POS
 
         elif option == 'Description':
-            update.message.reply_text(
-                f'Give a description to the term "{self.cur_term.name}".')
+            text = _('Give a description to the term "{}".'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.DESCRIPTION
 
         elif option == 'Synonyms':
-            update.message.reply_text(
-                f'List synonyms of the term "{self.cur_term.name}" separating them with comma.')
+            text = _('List synonyms of the term "{}" separating them with comma.'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.SYNONYMS
 
         elif option == 'Similar words':
-            update.message.reply_text(
-                f'List words similar with the term "{self.cur_term.name}" separating them with comma.')
+            text = _('List words similar with the term "{}" separating them with comma.'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.SIMILARS
 
         elif option == 'Image':
-            update.message.reply_text(
-                f'Let\'s upload an image for the term "{self.cur_term.name}".')
+            text = _('Let\'s upload an image for the term "{}".'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.IMAGE
 
         elif option == 'Audio':
-            update.message.reply_text(
-                f'Let\'s upload an audiofile for the term "{self.cur_term.name}".')
+            text = _('Let\'s upload an audiofile for the term "{}".'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.AUDIO
 
         elif option == 'Video':
-            update.message.reply_text(
-                f'Let\'s upload a video for the term "{self.cur_term.name}".')
+            text = _('Let\'s upload a video for the term "{}".'.format(self.cur_term.name))
+            update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.VIDEO
 
         else:
+            text = _('Feel free to choose.')
+            update.message.reply_text(text, reply_markup=self.reply_menu_keyboard)
             return self.CHOOSE_OPTION
 
     def pos_tag(self, bot, update):
@@ -171,7 +185,7 @@ class Bot:
 
         self.term_collection.update(self.cur_term.id, {'pos_tag': pos_tag})
 
-        update.message.reply_text('I see!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('I see!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def description(self, bot, update):
@@ -185,7 +199,7 @@ class Bot:
 
         self.term_collection.update(self.cur_term.id, {'description': dscr})
 
-        update.message.reply_text('Good work!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('Good work!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def image(self, bot, update):
@@ -202,7 +216,7 @@ class Bot:
 
         self.term_collection.update(self.cur_term.id, {'image': f'image_{self.cur_term.name}'})
 
-        update.message.reply_text('Awesome!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('Awesome!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def audio(self, bot, update):
@@ -219,7 +233,7 @@ class Bot:
 
         self.term_collection.update(self.cur_term.id, {'audiofile': f'audio_{self.cur_term.name}'})
 
-        update.message.reply_text('Awesome!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('Awesome!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def video(self, bot, update):
@@ -237,7 +251,7 @@ class Bot:
 
         self.term_collection.update(self.cur_term.id, {'videofile': f'video_{self.cur_term.name}'})
 
-        update.message.reply_text('Awesome!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('Awesome!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def synonyms(self, bot, update):
@@ -253,7 +267,7 @@ class Bot:
 
         self.term_collection.add_synonyms_similars(self.cur_term.id, words=synonyms, table='syn')
 
-        update.message.reply_text('I\'ll remember this!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('I\'ll remember this!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def similars(self, bot, update):
@@ -269,7 +283,7 @@ class Bot:
 
         self.term_collection.add_synonyms_similars(self.cur_term.id, words=similars, table='sim')
 
-        update.message.reply_text('I\'ll remember this!', reply_markup=self.reply_menu_keyboard)
+        update.message.reply_text(_('I\'ll remember this!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
     def error(self, bot, update, error):
@@ -286,7 +300,7 @@ class Bot:
 
         logger.info('User %s canceled the conversation.', user.first_name)
 
-        update.message.reply_text('Bye! I hope we can talk again some day.',
+        update.message.reply_text(_('Bye! I hope we can talk again some day.'),
                                   reply_markup=ReplyKeyboardRemove())
 
         return ConversationHandler.END
@@ -301,15 +315,19 @@ class Bot:
             entry_points=[CommandHandler('start', self.start)],
 
             states={
-                self.START_MENU: [RegexHandler('^Add new term$', self.new_term_option),
-                                  RegexHandler('^Get list of terms$', self.list_of_terms_option)],
+                self.START_MENU: [RegexHandler(f'^{new_term_opt}$', self.new_term_option),
+                                  RegexHandler(f'^{list_term_opt}$', self.list_of_terms_option)],
 
-                self.CHOOSE_TERM: [RegexHandler('^[0-9]+$', self.choose_term)],
+                self.CHOOSE_TERM: [
+                    RegexHandler('^[0-9]+$', self.choose_term),
+                    CommandHandler('menu', self.choose_menu_option),
+                    CommandHandler('terms', self.list_of_terms_option)
+                ],
 
                 self.NEW_TERM: [MessageHandler(Filters.text, self.add_new_term)],
 
                 self.CHOOSE_OPTION: [
-                    RegexHandler('^(POS-tag|Description|Synonyms|Similar words|Image|Audio|Video)',
+                    RegexHandler(f'^({pos_tag_opt}|{description_opt}|{synonyms_opt}|{similars_opt}|{image_opt}|{audio_opt}|{video_opt})',
                                                   self.choose_menu_option),
                     CommandHandler('terms', self.list_of_terms_option)
                 ],
