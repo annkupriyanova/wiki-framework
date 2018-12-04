@@ -1,7 +1,7 @@
 # wiki-framework
 
 ### Terminology Telegram Bot
-1. After cloning the repository execute install.sh script. 
+1. After activating virtual environment and cloning the repository execute install.sh script. 
 
 The script will:
   - create Docker container with PostgreSQL,
