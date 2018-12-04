@@ -1,14 +1,17 @@
 # wiki-framework
 
 ### Terminology Telegram Bot
-1. After activating virtual environment and cloning the repository execute install.sh script. 
+After activating virtual environment and cloning the repository:
+ 1. Go to */terminology_bot* directory.
+ 2. Execute *install.sh* script.
 
-The script will:
-  - create Docker container with PostgreSQL,
-  - install the project dependencies from requirements.txt,
-  - execute terminology_bot/database.py to create DB schema and insert initial data.
+    The script will:
+      - create Docker container with PostgreSQL,
+      - install the project dependencies from requirements.txt,
+      - execute *database.py* to create DB schema and insert initial data.
 
-2. Get your private token from Telegram BotFather (run /newbot command and follow BotFather's instructions).
-3. Insert the token into the terminology_bot/config.ini file.
-4. Set multimedia_dir in the terminology_bot/config.ini file to store multimedia files for the terms. 
-4. To play with the bot run terminology_bot/bot.py file and in Telegram send /start command to your new bot.
+ 3. Get your private token from Telegram BotFather (run */newbot* command and follow BotFather's instructions).
+ 4. Insert the *token* into the *config.ini* file.
+ 5. Set *multimedia_dir* in the *config.ini* file to store multimedia files for the terms.
+ 6. To play with the bot run *bot.py* file.
+ 7. In Telegram send */start* command to your new bot.

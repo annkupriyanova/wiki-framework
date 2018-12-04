@@ -124,7 +124,7 @@ class Bot:
             update.message.reply_text(
                 f'Choose the part-of-speech tag for the term "{self.cur_term.name}".\n'
                 'Feel free to go back to the /menu.',
-                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
             return self.POS
 
         elif option == 'Description':
