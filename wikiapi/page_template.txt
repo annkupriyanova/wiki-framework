@@ -1,0 +1,25 @@
+==Description==
+description_placeholder
+
+
+==Part of speech==
+part_of_speech_placeholder
+
+==Additional info==
+
+===Synonyms===
+synonyms_placeholder
+
+===Similar words===
+similar_words_placeholder
+
+==Media info==
+
+===Photo===
+photo_placeholder
+
+===Audio===
+audio_placeholder
+
+===Video===
+video_placeholder
