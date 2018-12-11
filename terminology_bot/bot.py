@@ -1,6 +1,7 @@
 import logging
 import hashlib
 import gettext
+import locale
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
                           ConversationHandler)
@@ -10,8 +11,11 @@ from term_collection import TermCollection
 from database import POSEnum
 
 
-t = gettext.translation('terminology_bot', '/usr/share/locale')
-_ = t.gettext
+current_locale, encoding = locale.getdefaultlocale()
+
+locale_path = 'data/locale/'
+language = gettext.translation ('bot', locale_path, [current_locale])
+_ = language.gettext
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO)
@@ -109,8 +113,8 @@ class Bot:
 
             logger.info('User %s chose the term "%s"', user.first_name, self.cur_term.name)
 
-            text = _('Let\'s make the profile of the term "{}".\n'
-                     'Feel free to go back to the /menu and to the list of /terms.'.format(self.cur_term.name))
+            text = _('Let\'s make the profile of the term "%s".\n'
+                     'Feel free to go back to the /menu and to the list of /terms.') % self.cur_term.name
             update.message.reply_text(text, reply_markup=self.reply_menu_keyboard)
 
             # profile = self.get_term_profile()
@@ -130,42 +134,42 @@ class Bot:
         :return: the state depending on the user input
         """
         option = update.message.text
-        if option == 'POS-tag':
+        if option == _('POS-tag'):
             reply_keyboard = [POSEnum.__members__.keys()]
-            text = _('Choose the part-of-speech tag for the term "{}".'.format(self.cur_term.name))
+            text = _('Choose the part-of-speech tag for the term "%s".') % self.cur_term.name
 
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                              one_time_keyboard=True,
                                                                              resize_keyboard=True))
             return self.POS
 
-        elif option == 'Description':
-            text = _('Give a description to the term "{}".'.format(self.cur_term.name))
+        elif option == _('Description'):
+            text = _('Give a description to the term "%s".') % self.cur_term.name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.DESCRIPTION
 
-        elif option == 'Synonyms':
-            text = _('List synonyms of the term "{}" separating them with comma.'.format(self.cur_term.name))
+        elif option == _('Synonyms'):
+            text = _('List synonyms of the term "%s" separating them with comma.') % self.cur_term.name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.SYNONYMS
 
-        elif option == 'Similar words':
-            text = _('List words similar with the term "{}" separating them with comma.'.format(self.cur_term.name))
+        elif option == _('Similar words'):
+            text = _('List words similar with the term "%s" separating them with comma.') % self.cur_term.name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.SIMILARS
 
-        elif option == 'Image':
-            text = _('Let\'s upload an image for the term "{}".'.format(self.cur_term.name))
+        elif option == _('Image'):
+            text = _('Let\'s upload an image for the term "%s".') % self.cur_term.name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.IMAGE
 
-        elif option == 'Audio':
-            text = _('Let\'s upload an audiofile for the term "{}".'.format(self.cur_term.name))
+        elif option == _('Audio'):
+            text = _('Let\'s upload an audiofile for the term "%s".') % self.cur_term.name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.AUDIO
 
-        elif option == 'Video':
-            text = _('Let\'s upload a video for the term "{}".'.format(self.cur_term.name))
+        elif option == _('Video'):
+            text = _('Let\'s upload a video for the term "%s".') % self.cur_term.name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.VIDEO
 
