@@ -2,6 +2,7 @@ import logging
 import hashlib
 import gettext
 import locale
+import os
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
                           ConversationHandler)
@@ -213,7 +214,11 @@ class Bot:
         photo_file = bot.get_file(update.message.photo[-1].file_id)
 
         filename_sha1 = hashlib.sha1(bytes(f'image_{self.cur_term.name}', encoding='utf8')).hexdigest()
-        photo_file.download(f"{params['multimedia_dir']}/{filename_sha1}")
+
+        directory = f"{params['multimedia_dir']}/images"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        photo_file.download(f"{directory}/{filename_sha1}.jpg")
 
         logger.info('User %s uploaded the image for the term "%s"', user.first_name, self.cur_term.name)
 
@@ -230,7 +235,11 @@ class Bot:
         audio_file = bot.get_file(update.message.audio)
 
         filename_sha1 = hashlib.sha1(bytes(f'audio_{self.cur_term.name}', encoding='utf8')).hexdigest()
-        audio_file.download(f"{params['multimedia_dir']}/{filename_sha1}")
+
+        directory = f"{params['multimedia_dir']}/audio"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        audio_file.download(f"{directory}/{filename_sha1}")
 
         logger.info('User %s uploaded the audiofile for the term "%s"', user.first_name, self.cur_term.name)
 
@@ -248,7 +257,11 @@ class Bot:
         video_file = bot.get_file(update.message.video)
 
         filename_sha1 = hashlib.sha1(bytes(f'video_{self.cur_term.name}', encoding='utf8')).hexdigest()
-        video_file.download(f"{params['multimedia_dir']}/{filename_sha1}")
+
+        directory = f"{params['multimedia_dir']}/video"
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        video_file.download(f"{directory}/{filename_sha1}")
 
         logger.info('User %s uploaded the videofile for the term "%s"', user.first_name, self.cur_term.name)
 
@@ -324,57 +337,69 @@ class Bot:
                 self.CHOOSE_TERM: [
                     RegexHandler('^[0-9]+$', self.choose_term),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
-                self.NEW_TERM: [MessageHandler(Filters.text, self.add_new_term)],
+                self.NEW_TERM: [
+                    MessageHandler(Filters.text, self.add_new_term),
+                    CommandHandler('start', self.start)
+                ],
 
                 self.CHOOSE_OPTION: [
                     RegexHandler(f'^({pos_tag_opt}|{description_opt}|{synonyms_opt}|{similars_opt}|{image_opt}|{audio_opt}|{video_opt})',
                                                   self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.POS: [
                     RegexHandler(f"^({'|'.join(tags)})$", self.pos_tag),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.DESCRIPTION: [
                     MessageHandler(Filters.text, self.description),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.SYNONYMS: [
                     MessageHandler(Filters.text, self.synonyms),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.SIMILARS: [
                     MessageHandler(Filters.text, self.similars),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.IMAGE: [
                     MessageHandler(Filters.photo, self.image),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.AUDIO: [
                     MessageHandler(Filters.audio, self.audio),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ],
 
                 self.VIDEO: [
                     MessageHandler(Filters.video, self.video),
                     CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option)
+                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('start', self.start)
                 ]
             },
 
