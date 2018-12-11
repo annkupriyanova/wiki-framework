@@ -16,7 +16,10 @@ services:
       # After initial setup, download LocalSettings.php to the same directory as
       # this yaml and uncomment the following line and use compose to restart
       # the mediawiki service
-      - ./LocalSettings.php:/var/www/html/LocalSettings.php
+      - ./resourses/wiki/LocalSettings.php:/var/www/html/LocalSettings.php
+      - ./resourses/wiki/Scribunto:/var/www/html/extensions/Scribunto
+      - ./resourses/wiki/TemplateData:/var/www/html/extensions/TemplateData
+      - ./resourses/wiki/TemplateStyles:/var/www/html/extensions/TemplateStyles
   database:
     image: mariadb:10.3
     restart: always
@@ -27,7 +30,7 @@ services:
       MYSQL_PASSWORD: examplepass
       MYSQL_ROOT_PASSWORD: rootpass
   app:
-    build: ./api
+    build: wikiapi
     links:
       - database
       - mediawiki

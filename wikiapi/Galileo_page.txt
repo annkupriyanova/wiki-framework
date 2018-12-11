@@ -1,0 +1,28 @@
+'''Galileo Galilei'''
+==Description==
+Famous italian scientist
+
+
+
+==Part of speech==
+Noun
+
+==Additional info==
+
+===Synonyms===
+Scientist
+
+===Similar words===
+Newton
+Leonardo da Vinci
+
+==Media info==
+
+===Photo===
+No photo yet
+
+===Audio===
+No audio yet
+
+===Video===
+No video yet
