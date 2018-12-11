@@ -12,6 +12,6 @@ After activating virtual environment and cloning the repository:
 
  3. Get your private token from Telegram BotFather (run */newbot* command and follow BotFather's instructions).
  4. Insert the *token* into the *config.ini* file.
- 5. Set *multimedia_dir* in the *config.ini* file to store multimedia files for the terms.
+ 5. Set an absolute path to *multimedia_dir* in the *config.ini* file to store multimedia files for the terms.
  6. To play with the bot run *bot.py* file.
  7. In Telegram send */start* command to your new bot.

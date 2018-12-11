@@ -10,11 +10,10 @@ from config import get_config
 from term_collection import TermCollection
 from database import POSEnum
 
-
+locale.setlocale(locale.LC_ALL, '')
 current_locale, encoding = locale.getdefaultlocale()
-
 locale_path = 'data/locale/'
-language = gettext.translation ('bot', locale_path, [current_locale])
+language = gettext.translation('bot', locale_path, [current_locale])
 _ = language.gettext
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -214,7 +213,7 @@ class Bot:
         photo_file = bot.get_file(update.message.photo[-1].file_id)
 
         filename_sha1 = hashlib.sha1(bytes(f'image_{self.cur_term.name}', encoding='utf8')).hexdigest()
-        photo_file.download(f".{params['multimedia_dir']}/{filename_sha1}")
+        photo_file.download(f"{params['multimedia_dir']}/{filename_sha1}")
 
         logger.info('User %s uploaded the image for the term "%s"', user.first_name, self.cur_term.name)
 
@@ -231,7 +230,7 @@ class Bot:
         audio_file = bot.get_file(update.message.audio)
 
         filename_sha1 = hashlib.sha1(bytes(f'audio_{self.cur_term.name}', encoding='utf8')).hexdigest()
-        audio_file.download(f".{params['multimedia_dir']}/{filename_sha1}")
+        audio_file.download(f"{params['multimedia_dir']}/{filename_sha1}")
 
         logger.info('User %s uploaded the audiofile for the term "%s"', user.first_name, self.cur_term.name)
 
@@ -249,7 +248,7 @@ class Bot:
         video_file = bot.get_file(update.message.video)
 
         filename_sha1 = hashlib.sha1(bytes(f'video_{self.cur_term.name}', encoding='utf8')).hexdigest()
-        video_file.download(f".{params['multimedia_dir']}/{filename_sha1}")
+        video_file.download(f"{params['multimedia_dir']}/{filename_sha1}")
 
         logger.info('User %s uploaded the videofile for the term "%s"', user.first_name, self.cur_term.name)
 
