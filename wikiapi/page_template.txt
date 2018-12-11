@@ -5,11 +5,20 @@ description_placeholder
 ==Part of speech==
 part_of_speech_placeholder
 
+<<<<<<< HEAD
 
 ==Synonyms==
 synonyms_placeholder
 
 ==Similar words==
+=======
+==Additional info==
+
+===Synonyms===
+synonyms_placeholder
+
+===Similar words===
+>>>>>>> c7659997ae814b4680296461cb7c512fee47fa92
 similar_words_placeholder
 
 ==Media info==
