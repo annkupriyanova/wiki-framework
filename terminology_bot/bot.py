@@ -11,36 +11,56 @@ from config import get_config
 from term_collection import TermCollection
 from database import POSEnum
 
-locale.setlocale(locale.LC_ALL, '')
-current_locale, encoding = locale.getdefaultlocale()
+
+# default language settings
 locale_path = 'data/locale/'
-language = gettext.translation('bot', locale_path, [current_locale])
+language = gettext.translation('bot', locale_path, ['en'])
 _ = language.gettext
 
+# logging settings
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO)
-
 logger = logging.getLogger(__name__)
+
+# getting bot parameters from config file
 params = get_config(section='bot')
 
 
-new_term_opt, list_term_opt = (_('Add new term'), _('Get list of terms'))
-pos_tag_opt, description_opt = (_('POS-tag'), _('Description'))
-synonyms_opt, similars_opt = (_('Synonyms'), _('Similar words'))
-image_opt, audio_opt, video_opt = (_('Image'), _('Audio'), _('Video'))
+def change_language(lang_code):
+    """Changes language settings"""
+    global language, options, _
+    try:
+        language = gettext.translation('bot', locale_path, [lang_code])
+        _ = language.gettext
+        options = set_options()
+    except IOError:
+        pass
+
+
+def set_options():
+    """Updates UI menu options"""
+    return {
+        'new_term': _('Add new term'),
+        'list_term': _('Get list of terms'),
+        'pos_tag': _('POS-tag'),
+        'description': _('Description'),
+        'synonyms': _('Synonyms'),
+        'similars': _('Similar words'),
+        'image': _('Image'),
+        'audio': _('Audio'),
+        'video': _('Video'),
+    }
+
+# set default english menu options
+options = set_options()
 
 
 class Bot:
     START_MENU, CHOOSE_TERM, NEW_TERM, CHOOSE_OPTION, \
     POS, DESCRIPTION, SYNONYMS, SIMILARS, IMAGE, AUDIO, VIDEO = range(11)
 
-    reply_start_keyboard = ReplyKeyboardMarkup([[new_term_opt], [list_term_opt]], resize_keyboard=True)
-    reply_menu_keyboard = ReplyKeyboardMarkup(
-        [[pos_tag_opt, description_opt],
-         [synonyms_opt, similars_opt],
-         [image_opt, audio_opt, video_opt]],
-        resize_keyboard=True
-    )
+    reply_start_menu_keyboard = ReplyKeyboardMarkup([])
+    reply_menu_keyboard = ReplyKeyboardMarkup([])
 
     def __init__(self):
         self.updater = Updater(token=params['token'])
@@ -48,13 +68,43 @@ class Bot:
         self.term_collection = TermCollection()
         self.cur_term = {}
 
+    def set_keyboard(self):
+        """Sets keyboard according to user's language. Default is English."""
+        self.reply_start_menu_keyboard = ReplyKeyboardMarkup([[options['new_term']], [options['list_term']]],
+                                                             resize_keyboard=True, one_time_keyboard=True)
+
+        self.reply_menu_keyboard = ReplyKeyboardMarkup([[options['pos_tag'], options['description']],
+                                                        [options['synonyms'], options['similars']],
+                                                        [options['image'], options['audio'], options['video']]],
+                                                       resize_keyboard=True)
+
+    def update_state_handlers(self):
+        """Adds Regular Expression Handlers according to user's language."""
+        self.dispatcher.handlers[0][0].states[self.START_MENU].extend([
+            RegexHandler(f"^{options['new_term']}$", self.new_term_option),
+            RegexHandler(f"^{options['list_term']}$", self.list_of_terms_option)
+        ])
+        self.dispatcher.handlers[0][0].states[self.CHOOSE_OPTION].append(
+            RegexHandler(f"^({options['pos_tag']}|{options['description']}|{options['synonyms']}|"
+                         f"{options['similars']}|{options['image']}|{options['audio']}|{options['video']})$",
+                         self.choose_menu_option)
+        )
+
     def start(self, bot, update):
         """
         Sends the greeting message with the start menu: 'Add new term' and 'Get list of terms' options
         :return: the state START_MENU
         """
+        # set language settings, UI-elements and button handlers according User's language_code
+        lang_code = update.message.from_user.language_code
+        if lang_code != 'en':
+            change_language(lang_code)
+
+        self.set_keyboard()
+        self.update_state_handlers()
+
         update.message.reply_text(_('Hello! I am Terminology Bot. Send /cancel to stop talking to me.'),
-                                  reply_markup=self.reply_start_keyboard)
+                                  reply_markup=self.reply_start_menu_keyboard)
         return self.START_MENU
 
     def new_term_option(self, bot, update):
@@ -62,7 +112,7 @@ class Bot:
         Callback function for the user choosing 'Add new term' option
         :return: the state NEW_TERM
         """
-        update.message.reply_text(_('Type in the term.'), reply_markup=ReplyKeyboardRemove())
+        update.message.reply_text(_('Type in the term.'))
         return self.NEW_TERM
 
     def add_new_term(self, bot, update):
@@ -77,8 +127,7 @@ class Bot:
 
         self.term_collection.create(term_name)
 
-        update.message.reply_text(_('I\'ll remember this term.'),
-                                  reply_markup=self.reply_start_keyboard)
+        update.message.reply_text(_('I\'ll remember this term.'), reply_markup=self.reply_start_menu_keyboard)
 
         return self.START_MENU
 
@@ -116,10 +165,6 @@ class Bot:
             text = _('Let\'s make the profile of the term "%s".\n'
                      'Feel free to go back to the /menu and to the list of /terms.') % self.cur_term.name
             update.message.reply_text(text, reply_markup=self.reply_menu_keyboard)
-
-            # profile = self.get_term_profile()
-            # update.message.reply_text(f'{self.cur_term.name.capitalize()}:\n{profile}',
-            #                           reply_markup=self.reply_menu_keyboard)
 
             return self.CHOOSE_OPTION
 
@@ -331,8 +376,7 @@ class Bot:
             entry_points=[CommandHandler('start', self.start)],
 
             states={
-                self.START_MENU: [RegexHandler(f'^{new_term_opt}$', self.new_term_option),
-                                  RegexHandler(f'^{list_term_opt}$', self.list_of_terms_option)],
+                self.START_MENU: [],
 
                 self.CHOOSE_TERM: [
                     RegexHandler('^[0-9]+$', self.choose_term),
@@ -347,8 +391,6 @@ class Bot:
                 ],
 
                 self.CHOOSE_OPTION: [
-                    RegexHandler(f'^({pos_tag_opt}|{description_opt}|{synonyms_opt}|{similars_opt}|{image_opt}|{audio_opt}|{video_opt})',
-                                                  self.choose_menu_option),
                     CommandHandler('terms', self.list_of_terms_option),
                     CommandHandler('start', self.start)
                 ],
@@ -414,17 +456,17 @@ class Bot:
 
         self.updater.idle()
 
-    def get_term_profile(self):
-        """
-        Makes the short profile of the term chosen by the user.
-        """
-        profile = ''
-        if self.cur_term.pos_tag:
-            profile += f'1. {self.cur_term.pos_tag}\n'
-        if self.cur_term.description:
-            profile += f'2. {self.cur_term.description}\n'
-
-        return profile
+    # def get_term_profile(self):
+    #     """
+    #     Makes the short profile of the term chosen by the user.
+    #     """
+    #     profile = ''
+    #     if self.cur_term.pos_tag:
+    #         profile += f'1. {self.cur_term.pos_tag}\n'
+    #     if self.cur_term.description:
+    #         profile += f'2. {self.cur_term.description}\n'
+    #
+    #     return profile
 
 
 if __name__ == '__main__':
