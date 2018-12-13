@@ -1,0 +1,6 @@
+dist: xenial      # 12.04 Precise default
+language: python
+python:
+  - "3.6"         # 2.7 default
+cache: pip
+script: pytest
