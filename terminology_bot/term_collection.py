@@ -8,8 +8,13 @@ class TermCollection:
 
     def get_terms(self):
         with SQLAlchemyDBConnection(db_string) as db:
-            self.terms = [t.name for t in db.session.query(Term)]
-        return self.terms
+            terms = db.session.query(Term).all()
+        return terms
+
+    def get(self, term_id):
+        with SQLAlchemyDBConnection(db_string) as db:
+            term = db.session.query(Term).filter(Term.id == term_id).first()
+        return term
 
     def create(self, term_name):
         term_name = term_name.lower()
@@ -50,10 +55,10 @@ class TermCollection:
 
             db.session.commit()
 
-    def __getitem__(self, index):
-        name = self.terms[index]
-
-        with SQLAlchemyDBConnection(db_string) as db:
-            term = db.session.query(Term).filter(Term.name == name).first()
-
-        return term
+    # def __getitem__(self, index):
+    #     name = self.terms[index]
+    #
+    #     with SQLAlchemyDBConnection(db_string) as db:
+    #         term = db.session.query(Term).filter(Term.name == name).first()
+    #
+    #     return term

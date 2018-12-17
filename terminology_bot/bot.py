@@ -1,7 +1,6 @@
 import logging
 import hashlib
 import gettext
-import locale
 import os
 from telegram import (ReplyKeyboardMarkup, ReplyKeyboardRemove)
 from telegram.ext import (Updater, CommandHandler, MessageHandler, Filters, RegexHandler,
@@ -82,12 +81,12 @@ class Bot:
         """Adds Regular Expression Handlers according to user's language."""
         self.dispatcher.handlers[0][0].states[self.START_MENU].extend([
             RegexHandler(f"^{options['new_term']}$", self.new_term_option),
-            RegexHandler(f"^{options['list_term']}$", self.list_of_terms_option)
+            RegexHandler(f"^{options['list_term']}$", self.list_of_terms_option, pass_user_data=True)
         ])
         self.dispatcher.handlers[0][0].states[self.CHOOSE_OPTION].append(
             RegexHandler(f"^({options['pos_tag']}|{options['description']}|{options['synonyms']}|"
                          f"{options['similars']}|{options['image']}|{options['audio']}|{options['video']})$",
-                         self.choose_menu_option)
+                         self.choose_menu_option, pass_user_data=True)
         )
 
     def start(self, bot, update):
@@ -131,14 +130,15 @@ class Bot:
 
         return self.START_MENU
 
-    def list_of_terms_option(self, bot, update):
+    def list_of_terms_option(self, bot, update, user_data):
         """
         Callback function for the user choosing 'Get list of terms' option.
         Sends the message with the list of terms from DB.
         :return: the state CHOOSE_TERM
         """
         terms = self.term_collection.get_terms()
-        terms_list = [f'{i+1}. {terms[i]}' for i in range(len(terms))]
+        user_data['terms'] = {i+1: terms[i] for i in range(len(terms))}
+        terms_list = [f'{key}. {term.name}' for key, term in user_data['terms'].items()]
 
         text_list = [_('These are the terms I know:')]
         text_list.extend(terms_list)
@@ -150,20 +150,23 @@ class Bot:
 
         return self.CHOOSE_TERM
 
-    def choose_term(self, bot, update):
+    def choose_term(self, bot, update, user_data):
         """
         Sets the current term for future editing based on the user input
         :return: the state CHOOSE_OPTION
         """
         user = update.message.from_user
         try:
-            index = int(update.message.text) - 1
-            self.cur_term = self.term_collection[index]
+            index = int(update.message.text)
+            id = user_data['terms'][index].id
+            user_data['cur_term'] = self.term_collection.get(id)
 
-            logger.info('User %s chose the term "%s"', user.first_name, self.cur_term.name)
+            del user_data['terms']
+
+            logger.info('User %s chose the term "%s"', user.first_name, user_data['cur_term'].name)
 
             text = _('Let\'s make the profile of the term "%s".\n'
-                     'Feel free to go back to the /menu and to the list of /terms.') % self.cur_term.name
+                     'Feel free to go back to the /menu and to the list of /terms.') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=self.reply_menu_keyboard)
 
             return self.CHOOSE_OPTION
@@ -173,7 +176,7 @@ class Bot:
             update.message.reply_text(text)
             return self.CHOOSE_TERM
 
-    def choose_menu_option(self, bot, update):
+    def choose_menu_option(self, bot, update, user_data):
         """
         Directs the user for futher actions based on the option he chose from the menu
         :return: the state depending on the user input
@@ -181,7 +184,7 @@ class Bot:
         option = update.message.text
         if option == _('POS-tag'):
             reply_keyboard = [POSEnum.__members__.keys()]
-            text = _('Choose the part-of-speech tag for the term "%s".') % self.cur_term.name
+            text = _('Choose the part-of-speech tag for the term "%s".') % user_data['cur_term'].name
 
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard,
                                                                              one_time_keyboard=True,
@@ -189,32 +192,32 @@ class Bot:
             return self.POS
 
         elif option == _('Description'):
-            text = _('Give a description to the term "%s".') % self.cur_term.name
+            text = _('Give a description to the term "%s".') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.DESCRIPTION
 
         elif option == _('Synonyms'):
-            text = _('List synonyms of the term "%s" separating them with comma.') % self.cur_term.name
+            text = _('List synonyms of the term "%s" separating them with comma.') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.SYNONYMS
 
         elif option == _('Similar words'):
-            text = _('List words similar with the term "%s" separating them with comma.') % self.cur_term.name
+            text = _('List words similar with the term "%s" separating them with comma.') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.SIMILARS
 
         elif option == _('Image'):
-            text = _('Let\'s upload an image for the term "%s".') % self.cur_term.name
+            text = _('Let\'s upload an image for the term "%s".') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.IMAGE
 
         elif option == _('Audio'):
-            text = _('Let\'s upload an audiofile for the term "%s".') % self.cur_term.name
+            text = _('Let\'s upload an audiofile for the term "%s".') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.AUDIO
 
         elif option == _('Video'):
-            text = _('Let\'s upload a video for the term "%s".') % self.cur_term.name
+            text = _('Let\'s upload a video for the term "%s".') % user_data['cur_term'].name
             update.message.reply_text(text, reply_markup=ReplyKeyboardRemove())
             return self.VIDEO
 
@@ -223,7 +226,7 @@ class Bot:
             update.message.reply_text(text, reply_markup=self.reply_menu_keyboard)
             return self.CHOOSE_OPTION
 
-    def pos_tag(self, bot, update):
+    def pos_tag(self, bot, update, user_data):
         """
         Saves pos-tag of the current term to DB
         """
@@ -232,68 +235,72 @@ class Bot:
 
         logger.info('User %s chose pos-tag "%s"', user.first_name, pos_tag)
 
-        self.term_collection.update(self.cur_term.id, {'pos_tag': pos_tag})
+        self.term_collection.update(user_data['cur_term'].id, {'pos_tag': pos_tag})
 
         update.message.reply_text(_('I see!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
-    def description(self, bot, update):
+    def description(self, bot, update, user_data):
         """
         Saves description of the current term to DB
         """
         user = update.message.from_user
         dscr = update.message.text
 
-        logger.info('User %s gave a description to the term "%s"', user.first_name, self.cur_term.name)
+        logger.info('User %s gave a description to the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.update(self.cur_term.id, {'description': dscr})
+        self.term_collection.update(user_data['cur_term'].id, {'description': dscr})
 
         update.message.reply_text(_('Good work!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
-    def image(self, bot, update):
+    def image(self, bot, update, user_data):
         """
         Saves image of the current term to DB
         """
         user = update.message.from_user
         photo_file = bot.get_file(update.message.photo[-1].file_id)
 
-        filename_sha1 = hashlib.sha1(bytes(f'image_{self.cur_term.name}', encoding='utf8')).hexdigest()
+        filename_sha1 = hashlib.sha1(bytes(f"image_{user_data['cur_term'].id}", encoding='utf8')).hexdigest()
 
         directory = f"{params['multimedia_dir']}/images"
         if not os.path.exists(directory):
             os.makedirs(directory)
         photo_file.download(f"{directory}/{filename_sha1}.jpg")
 
-        logger.info('User %s uploaded the image for the term "%s"', user.first_name, self.cur_term.name)
+        logger.info('User %s uploaded the image for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.update(self.cur_term.id, {'image': f'image_{self.cur_term.name}'})
+        self.term_collection.update(user_data['cur_term'].id, {'image': f"image_{user_data['cur_term'].id}"})
 
         update.message.reply_text(_('Awesome!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
-    def audio(self, bot, update):
+    def audio(self, bot, update, user_data):
         """
         Saves audiofile of the current term to DB
         """
         user = update.message.from_user
-        audio_file = bot.get_file(update.message.audio)
+        if update.message.audio:
+            audio_file = bot.get_file(update.message.audio)
+        elif update.message.voice:
+            audio_file = bot.get_file(update.message.voice)
+            print(audio_file)
 
-        filename_sha1 = hashlib.sha1(bytes(f'audio_{self.cur_term.name}', encoding='utf8')).hexdigest()
+        filename_sha1 = hashlib.sha1(bytes(f"audio_{user_data['cur_term'].id}", encoding='utf8')).hexdigest()
 
         directory = f"{params['multimedia_dir']}/audio"
         if not os.path.exists(directory):
             os.makedirs(directory)
-        audio_file.download(f"{directory}/{filename_sha1}")
+        audio_file.download(f"{directory}/{filename_sha1}.mp3")
 
-        logger.info('User %s uploaded the audiofile for the term "%s"', user.first_name, self.cur_term.name)
+        logger.info('User %s uploaded the audiofile for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.update(self.cur_term.id, {'audiofile': f'audio_{self.cur_term.name}'})
+        self.term_collection.update(user_data['cur_term'].id, {'audiofile': f"audio_{user_data['cur_term'].id}"})
 
         update.message.reply_text(_('Awesome!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
-    def video(self, bot, update):
+    def video(self, bot, update, user_data):
         """
         Saves videofile of the current term to DB
         """
@@ -301,21 +308,21 @@ class Bot:
 
         video_file = bot.get_file(update.message.video)
 
-        filename_sha1 = hashlib.sha1(bytes(f'video_{self.cur_term.name}', encoding='utf8')).hexdigest()
+        filename_sha1 = hashlib.sha1(bytes(f"video_{user_data['cur_term'].id}", encoding='utf8')).hexdigest()
 
         directory = f"{params['multimedia_dir']}/video"
         if not os.path.exists(directory):
             os.makedirs(directory)
         video_file.download(f"{directory}/{filename_sha1}")
 
-        logger.info('User %s uploaded the videofile for the term "%s"', user.first_name, self.cur_term.name)
+        logger.info('User %s uploaded the videofile for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.update(self.cur_term.id, {'videofile': f'video_{self.cur_term.name}'})
+        self.term_collection.update(user_data['cur_term'].id, {'videofile': f"video_{user_data['cur_term'].id}"})
 
         update.message.reply_text(_('Awesome!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
-    def synonyms(self, bot, update):
+    def synonyms(self, bot, update, user_data):
         """
         Saves synonyms of the current term to DB
         """
@@ -324,14 +331,14 @@ class Bot:
 
         synonyms = [syn.strip(' ') for syn in text.split(',')]
 
-        logger.info('User %s listed synonyms for the term "%s"', user.first_name, self.cur_term.name)
+        logger.info('User %s listed synonyms for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.add_synonyms_similars(self.cur_term.id, words=synonyms, table='syn')
+        self.term_collection.add_synonyms_similars(user_data['cur_term'].id, words=synonyms, table='syn')
 
         update.message.reply_text(_('I\'ll remember this!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
 
-    def similars(self, bot, update):
+    def similars(self, bot, update, user_data):
         """
         Saves similar words of the current term to DB
         """
@@ -340,9 +347,9 @@ class Bot:
 
         similars = [sim.strip(' ') for sim in text.split(',')]
 
-        logger.info('User %s listed similar words for the term "%s"', user.first_name, self.cur_term.name)
+        logger.info('User %s listed similar words for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.add_synonyms_similars(self.cur_term.id, words=similars, table='sim')
+        self.term_collection.add_synonyms_similars(user_data['cur_term'].id, words=similars, table='sim')
 
         update.message.reply_text(_('I\'ll remember this!'), reply_markup=self.reply_menu_keyboard)
         return self.CHOOSE_OPTION
@@ -379,9 +386,8 @@ class Bot:
                 self.START_MENU: [],
 
                 self.CHOOSE_TERM: [
-                    RegexHandler('^[0-9]+$', self.choose_term),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    RegexHandler('^[0-9]+$', self.choose_term, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
@@ -391,56 +397,56 @@ class Bot:
                 ],
 
                 self.CHOOSE_OPTION: [
-                    CommandHandler('terms', self.list_of_terms_option),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.POS: [
-                    RegexHandler(f"^({'|'.join(tags)})$", self.pos_tag),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    RegexHandler(f"^({'|'.join(tags)})$", self.pos_tag, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.DESCRIPTION: [
-                    MessageHandler(Filters.text, self.description),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    MessageHandler(Filters.text, self.description, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.SYNONYMS: [
-                    MessageHandler(Filters.text, self.synonyms),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    MessageHandler(Filters.text, self.synonyms, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.SIMILARS: [
-                    MessageHandler(Filters.text, self.similars),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    MessageHandler(Filters.text, self.similars, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.IMAGE: [
-                    MessageHandler(Filters.photo, self.image),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    MessageHandler(Filters.photo, self.image, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.AUDIO: [
-                    MessageHandler(Filters.audio, self.audio),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    MessageHandler(Filters.audio | Filters.voice, self.audio, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ],
 
                 self.VIDEO: [
-                    MessageHandler(Filters.video, self.video),
-                    CommandHandler('menu', self.choose_menu_option),
-                    CommandHandler('terms', self.list_of_terms_option),
+                    MessageHandler(Filters.video, self.video, pass_user_data=True),
+                    CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start)
                 ]
             },
@@ -455,18 +461,6 @@ class Bot:
         self.updater.start_polling()
 
         self.updater.idle()
-
-    # def get_term_profile(self):
-    #     """
-    #     Makes the short profile of the term chosen by the user.
-    #     """
-    #     profile = ''
-    #     if self.cur_term.pos_tag:
-    #         profile += f'1. {self.cur_term.pos_tag}\n'
-    #     if self.cur_term.description:
-    #         profile += f'2. {self.cur_term.description}\n'
-    #
-    #     return profile
 
 
 if __name__ == '__main__':
