@@ -1,0 +1,142 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2018-12-11 13:57+0300\n"
+"PO-Revision-Date: 2018-12-12 14:48+0300\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 2.2\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: en\n"
+
+#: bot.py:27
+msgid "Add new term"
+msgstr "Add new term"
+
+#: bot.py:27
+msgid "Get list of terms"
+msgstr "Get list of terms"
+
+#: bot.py:28 bot.py:137
+msgid "POS-tag"
+msgstr "POS-tag"
+
+#: bot.py:28 bot.py:146
+msgid "Description"
+msgstr "Description"
+
+#: bot.py:29 bot.py:151
+msgid "Synonyms"
+msgstr "Synonyms"
+
+#: bot.py:29 bot.py:156
+msgid "Similar words"
+msgstr "Similar words"
+
+#: bot.py:30 bot.py:161
+msgid "Image"
+msgstr "Image"
+
+#: bot.py:30 bot.py:166
+msgid "Audio"
+msgstr "Audio"
+
+#: bot.py:30 bot.py:171
+msgid "Video"
+msgstr "Video"
+
+#: bot.py:56
+msgid "Hello! I am Terminology Bot. Send /cancel to stop talking to me."
+msgstr "Hello! I am Terminology Bot. Send /cancel to stop talking to me."
+
+#: bot.py:65
+msgid "Type in the term."
+msgstr "Type in the term."
+
+#: bot.py:80
+msgid "I'll remember this term."
+msgstr "I’ll remember this term."
+
+#: bot.py:94
+msgid "These are the terms I know:"
+msgstr "These are the terms I know:"
+
+#: bot.py:96
+msgid ""
+"\n"
+"Please, choose one of them."
+msgstr ""
+"\n"
+"Please, choose one of them."
+
+#: bot.py:116
+msgid ""
+"Let's make the profile of the term \"%s\".\n"
+"Feel free to go back to the /menu and to the list of /terms."
+msgstr ""
+"Let’s make the profile of the term “%s”.\n"
+"Feel free to go back to the /menu and to the list of /terms."
+
+#: bot.py:127
+msgid "Please choose an index number of a term from the list above."
+msgstr "Please choose an index number of a term from the list above."
+
+#: bot.py:139
+msgid "Choose the part-of-speech tag for the term \"%s\"."
+msgstr "Choose the part-of-speech tag for the term “%s”."
+
+#: bot.py:147
+msgid "Give a description to the term \"%s\"."
+msgstr "Give a description to the term “%s”."
+
+#: bot.py:152
+msgid "List synonyms of the term \"%s\" separating them with comma."
+msgstr "List synonyms of the term “%s” separating them with comma."
+
+#: bot.py:157
+msgid "List words similar with the term \"%s\" separating them with comma."
+msgstr "List words similar with the term “%s” separating them with comma."
+
+#: bot.py:162
+msgid "Let's upload an image for the term \"%s\"."
+msgstr "Let’s upload an image for the term “%s”."
+
+#: bot.py:167
+msgid "Let's upload an audiofile for the term \"%s\"."
+msgstr "Let’s upload an audiofile for the term “%s”."
+
+#: bot.py:172
+msgid "Let's upload a video for the term \"%s\"."
+msgstr "Let’s upload a video for the term “%s”."
+
+#: bot.py:177
+msgid "Feel free to choose."
+msgstr "Feel free to choose."
+
+#: bot.py:192
+msgid "I see!"
+msgstr "I see!"
+
+#: bot.py:206
+msgid "Good work!"
+msgstr "Good work!"
+
+#: bot.py:223 bot.py:240 bot.py:258
+msgid "Awesome!"
+msgstr "Awesome!"
+
+#: bot.py:274 bot.py:290
+msgid "I'll remember this!"
+msgstr "I’ll remember this!"
+
+#: bot.py:307
+msgid "Bye! I hope we can talk again some day."
+msgstr "Bye! I hope we can talk again some day."
