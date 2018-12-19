@@ -4,7 +4,5 @@ venv
 
 terminology_bot/config.mine.ini
 terminology_bot/__pycache__/
-terminology_bot/docker-entrypoint-initdb.d/init-user-db.sh
-terminology_bot/run.sh
 
 term_api

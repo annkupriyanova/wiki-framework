@@ -54,11 +54,3 @@ class TermCollection:
                     db.session.add(Similars(term_id=term.id, similar_word_id=s_word.id))
 
             db.session.commit()
-
-    # def __getitem__(self, index):
-    #     name = self.terms[index]
-    #
-    #     with SQLAlchemyDBConnection(db_string) as db:
-    #         term = db.session.query(Term).filter(Term.name == name).first()
-    #
-    #     return term
