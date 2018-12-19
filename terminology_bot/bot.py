@@ -11,11 +11,6 @@ from term_collection import TermCollection
 from database import POSEnum
 
 
-# default language settings
-# locale_path = 'data/locale/'
-# language = gettext.translation('bot', locale_path, ['en'])
-# _ = language.gettext
-
 # logging settings
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                             level=logging.INFO)
@@ -39,11 +34,14 @@ class Bot:
         self.cur_term = {}
 
     def set_language_and_options(self, lang_code):
+        """Sets language, UI-elements and button handlers according to lang_code"""
         locale_path = 'data/locale/'
         language = gettext.translation('bot', locale_path, ['en'])
 
         try:
             language = gettext.translation('bot', locale_path, [lang_code])
+        except IOError:
+            logger.info('No translation files for "%s" were found. English was set by default.', lang_code)
         finally:
             _ = language.gettext
             options = {
@@ -88,9 +86,7 @@ class Bot:
         Sends the greeting message with the start menu: 'Add new term' and 'Get list of terms' options
         :return: the state START_MENU
         """
-        # set language settings, UI-elements and button handlers according User's language_code
         lang_code = update.message.from_user.language_code
-        print(update.message.from_user.first_name, lang_code)
         lang, options, start_btn, term_btn = self.set_language_and_options(lang_code)
         user_data.update({'lang': lang, 'options': options, 'start_btn': start_btn, 'term_btn': term_btn})
 
