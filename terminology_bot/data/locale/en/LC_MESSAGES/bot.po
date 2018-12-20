@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2018-12-11 13:57+0300\n"
-"PO-Revision-Date: 2018-12-12 14:48+0300\n"
+"PO-Revision-Date: 2018-12-20 13:48+0300\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -140,3 +140,15 @@ msgstr "I’ll remember this!"
 #: bot.py:307
 msgid "Bye! I hope we can talk again some day."
 msgstr "Bye! I hope we can talk again some day."
+
+#: database.py:20
+msgid "noun"
+msgstr "noun"
+
+#: database.py:21
+msgid "verb"
+msgstr "verb"
+
+#: database.py:22
+msgid "adjective"
+msgstr "adjective"
