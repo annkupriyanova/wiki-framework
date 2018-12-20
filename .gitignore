@@ -4,5 +4,6 @@ venv
 
 terminology_bot/config.mine.ini
 terminology_bot/__pycache__/
+terminology_bot/test.py
 
 term_api

@@ -11,10 +11,15 @@ params = get_config(section='postgresql')
 db_string = f"postgresql://{params['user']}:{params['password']}@{params['host']}/{params['database']}"
 
 
+# dummy function for gettext to recognize POSenum values
+def _(str):
+    return str
+
+
 class POSEnum(enum.Enum):
-    noun = 'noun'
-    verb = 'verb'
-    adjective = 'adjective'
+    noun = _('noun')
+    verb = _('verb')
+    adjective = _('adjective')
 
 
 class Term(Base):

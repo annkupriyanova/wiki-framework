@@ -24,9 +24,6 @@ class Bot:
     START_MENU, CHOOSE_TERM, NEW_TERM, CHOOSE_OPTION, \
     POS, DESCRIPTION, SYNONYMS, SIMILARS, IMAGE, AUDIO, VIDEO = range(11)
 
-    reply_start_menu_keyboard = ReplyKeyboardMarkup([])
-    reply_menu_keyboard = ReplyKeyboardMarkup([])
-
     def __init__(self):
         self.updater = Updater(token=params['token'])
         self.dispatcher = self.updater.dispatcher
@@ -55,21 +52,23 @@ class Bot:
                 'audio': _('Audio'),
                 'video': _('Video'),
             }
-            self.set_keyboard(options)
-            self.update_state_handlers(options)
-            start_btn, term_btn = self.set_keyboard(options)
+            pos_tags = {_(member.value): member.value for name, member in POSEnum.__members__.items()}
 
-            return language, options, start_btn, term_btn
+            start_btn, term_btn, pos_btn = self.set_keyboard(options, pos_tags.keys())
+            self.update_state_handlers(options, pos_tags.keys())
 
-    def set_keyboard(self, options):
+            return language, options, pos_tags, start_btn, term_btn, pos_btn
+
+    def set_keyboard(self, options, tags):
         """Sets keyboard according to user's language. Default is English."""
         start_btn = [[options['new_term']], [options['list_term']]]
         term_btn = [[options['pos_tag'], options['description']],
                     [options['synonyms'], options['similars']],
                     [options['image'], options['audio'], options['video']]]
-        return start_btn, term_btn
+        pos_btn = [tags]
+        return start_btn, term_btn, pos_btn
 
-    def update_state_handlers(self, options):
+    def update_state_handlers(self, options, tags):
         """Adds Regular Expression Handlers according to user's language."""
         self.dispatcher.handlers[0][0].states[self.START_MENU].extend([
             RegexHandler(f"^{options['new_term']}$", self.new_term_option, pass_user_data=True),
@@ -80,6 +79,9 @@ class Bot:
                          f"{options['similars']}|{options['image']}|{options['audio']}|{options['video']})$",
                          self.choose_menu_option, pass_user_data=True)
         )
+        self.dispatcher.handlers[0][0].states[self.POS].append(
+            RegexHandler(f"^({'|'.join(tags)})$", self.pos_tag, pass_user_data=True)
+        )
 
     def start(self, bot, update, user_data):
         """
@@ -87,12 +89,14 @@ class Bot:
         :return: the state START_MENU
         """
         lang_code = update.message.from_user.language_code
-        lang, options, start_btn, term_btn = self.set_language_and_options(lang_code)
-        user_data.update({'lang': lang, 'options': options, 'start_btn': start_btn, 'term_btn': term_btn})
+        lang, options, pos_tags, start_btn, term_btn, pos_btn = self.set_language_and_options(lang_code)
+        user_data.update({'lang': lang, 'options': options, 'pos_tags': pos_tags,
+                          'start_btn': start_btn, 'term_btn': term_btn, 'pos_btn': pos_btn})
 
         _ = user_data['lang'].gettext
         update.message.reply_text(_('Hello! I am Terminology Bot. Send /cancel to stop talking to me.'),
-                                  reply_markup=self.reply_start_menu_keyboard)
+                                  reply_markup=ReplyKeyboardMarkup(keyboard=user_data['start_btn'],
+                                                                   resize_keyboard=True, one_time_keyboard=True))
         return self.START_MENU
 
     def new_term_option(self, bot, update, user_data):
@@ -184,10 +188,8 @@ class Bot:
 
         option = update.message.text
         if option == _('POS-tag'):
-            reply_keyboard = [POSEnum.__members__.keys()]
             text = _('Choose the part-of-speech tag for the term "%s".') % user_data['cur_term'].name
-
-            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard,
+            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(user_data['pos_btn'],
                                                                              one_time_keyboard=True,
                                                                              resize_keyboard=True))
             return self.POS
@@ -236,10 +238,11 @@ class Bot:
 
         user = update.message.from_user
         pos_tag = update.message.text
+        original_pos_tag = user_data['pos_tags'][pos_tag]
 
-        logger.info('User %s chose pos-tag "%s"', user.first_name, pos_tag)
+        logger.info('User %s chose pos-tag "%s"', user.first_name, original_pos_tag)
 
-        self.term_collection.update(user_data['cur_term'].id, {'pos_tag': pos_tag})
+        self.term_collection.update(user_data['cur_term'].id, {'pos_tag': original_pos_tag})
 
         update.message.reply_text(_('I see!'), reply_markup=ReplyKeyboardMarkup(keyboard=user_data['term_btn'],
                                                                                 resize_keyboard=True))
@@ -402,8 +405,6 @@ class Bot:
         """
         Registers the handlers of user actions and starts the bot
         """
-        tags = POSEnum.__members__.keys()
-
         conv_handler = ConversationHandler(
             entry_points=[CommandHandler('start', self.start, pass_user_data=True)],
 
@@ -427,7 +428,6 @@ class Bot:
                 ],
 
                 self.POS: [
-                    RegexHandler(f"^({'|'.join(tags)})$", self.pos_tag, pass_user_data=True),
                     CommandHandler('menu', self.choose_menu_option, pass_user_data=True),
                     CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start, pass_user_data=True)
