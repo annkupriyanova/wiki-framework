@@ -22,7 +22,7 @@ params = get_config(section='bot')
 
 class Bot:
     START_MENU, CHOOSE_TERM, NEW_TERM, CHOOSE_OPTION, \
-    POS, DESCRIPTION, SYNONYMS, SIMILARS, IMAGE, AUDIO, VIDEO = range(11)
+    POS, DESCRIPTION, SYNONYMS, SIMILARS, IMAGE, AUDIO, VIDEO, CLARIFY_CHOICE = range(12)
 
     def __init__(self):
         self.updater = Updater(token=params['token'])
@@ -137,7 +137,8 @@ class Bot:
 
         terms = self.term_collection.get_terms()
         user_data['terms'] = {i+1: terms[i] for i in range(len(terms))}
-        terms_list = [f'{key}. {term.name}' for key, term in user_data['terms'].items()]
+        terms_list = [f'{key}. {term.name} {"(" + term.pos_tag.value + ")" if term.pos_tag else ""}'
+                      for key, term in user_data['terms'].items()]
 
         text_list = [_('These are the terms I know:')]
         text_list.extend(terms_list)
@@ -167,8 +168,16 @@ class Bot:
 
             _ = user_data['lang'].gettext
 
-            text = _('Let\'s make the profile of the term "%s".\n'
-                     'Feel free to go back to the /menu and to the list of /terms.') % user_data['cur_term'].name
+            term_pos = ''
+            term_descr = ''
+            if user_data['cur_term'].pos_tag:
+                term_pos = f"({_(user_data['cur_term'].pos_tag.value)})"
+            if user_data['cur_term'].description:
+                term_descr = f": {user_data['cur_term'].description}"
+
+            text = _('Let\'s make the profile of the term "%s" %s%s.\n'
+                     'Feel free to go back to the /menu and to the list of /terms.\n') % (user_data['cur_term'].name,
+                                                                                          term_pos, term_descr)
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(keyboard=user_data['term_btn'],
                                                                              resize_keyboard=True))
 
@@ -355,11 +364,24 @@ class Bot:
 
         logger.info('User %s listed synonyms for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.add_synonyms_similars(user_data['cur_term'].id, words=synonyms, table='syn')
+        result = self.term_collection.add_synonyms_similars(user_data['cur_term'].id, words=synonyms, table='synonyms')
 
-        update.message.reply_text(_('I\'ll remember this!'), reply_markup=ReplyKeyboardMarkup(
-            keyboard=user_data['term_btn'], resize_keyboard=True))
-        return self.CHOOSE_OPTION
+        if not result:
+            # DB transaction was successful
+            update.message.reply_text(_('I\'ll remember this!'), reply_markup=ReplyKeyboardMarkup(
+                keyboard=user_data['term_btn'], resize_keyboard=True))
+            return self.CHOOSE_OPTION
+
+        else:
+            user_data['s_words_list'] = result
+            user_data['option'] = 'synonyms'
+            terms_list = self.get_clarification_list(result, _)
+
+            update.message.reply_text(_('List indices of the terms you meant, separating them with comma:\n%s')
+                                      % '\n'.join(terms_list),
+                                      reply_markup=ReplyKeyboardMarkup(keyboard=user_data['term_btn'],
+                                                                       resize_keyboard=True))
+            return self.CLARIFY_CHOICE
 
     def similars(self, bot, update, user_data):
         """
@@ -374,11 +396,62 @@ class Bot:
 
         logger.info('User %s listed similar words for the term "%s"', user.first_name, user_data['cur_term'].name)
 
-        self.term_collection.add_synonyms_similars(user_data['cur_term'].id, words=similars, table='sim')
+        result = self.term_collection.add_synonyms_similars(user_data['cur_term'].id, words=similars, table='similars')
 
-        update.message.reply_text(_('I\'ll remember this!'), reply_markup=ReplyKeyboardMarkup(
-            keyboard=user_data['term_btn'], resize_keyboard=True))
-        return self.CHOOSE_OPTION
+        if not result:
+            # DB transaction was successful
+            update.message.reply_text(_('I\'ll remember this!'), reply_markup=ReplyKeyboardMarkup(
+                keyboard=user_data['term_btn'], resize_keyboard=True))
+            return self.CHOOSE_OPTION
+        else:
+            user_data['s_words_list'] = result
+            user_data['option'] = 'similars'
+            terms_list = self.get_clarification_list(result, _)
+
+            update.message.reply_text(_('List indices of the terms you meant, separating them with comma:\n%s')
+                                      % '\n'.join(terms_list), reply_markup=ReplyKeyboardMarkup(keyboard=user_data['term_btn'],
+                                                                                     resize_keyboard=True))
+            return self.CLARIFY_CHOICE
+
+    def get_clarification_list(self, result, _):
+        terms_list = []
+        for i, t in enumerate(result):
+            line = f'{i+1}. {t.name}'
+            if t.pos_tag:
+                line += f' ({_(t.pos_tag.value)})'
+            if t.description:
+                line += f': {t.description}'
+            terms_list.append(line)
+        return terms_list
+
+    def clarify_choice(self, bot, update, user_data):
+        _ = user_data['lang'].gettext
+        user = update.message.from_user
+        text = update.message.text
+
+        try:
+            indices = [int(i) - 1 for i in text.split(',')]
+            clarification_ids = []
+
+            for index in indices:
+                s_word = user_data['s_words_list'][index]
+                clarification_ids.append(s_word.id)
+
+            logger.info('User %s clarified the terms.', user.first_name)
+
+            self.term_collection.add_synonyms_similars(user_data['cur_term'].id, [], table=user_data['option'],
+                                                       clarification_ids=clarification_ids)
+            del user_data['s_words_list']
+            del user_data['option']
+
+            update.message.reply_text(_('I will save your choice.'), reply_markup=ReplyKeyboardMarkup(
+                keyboard=user_data['term_btn'], resize_keyboard=True))
+            return self.CHOOSE_OPTION
+
+        except (IndexError, ValueError):
+            text = _('Please choose an index number of a term from the list above.')
+            update.message.reply_text(text)
+            return self.CLARIFY_CHOICE
 
     def error(self, bot, update, error):
         """
@@ -413,6 +486,12 @@ class Bot:
 
                 self.CHOOSE_TERM: [
                     RegexHandler('^[0-9]+$', self.choose_term, pass_user_data=True),
+                    CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
+                    CommandHandler('start', self.start, pass_user_data=True)
+                ],
+
+                self.CLARIFY_CHOICE: [
+                    MessageHandler(Filters.text, self.clarify_choice, pass_user_data=True),
                     CommandHandler('terms', self.list_of_terms_option, pass_user_data=True),
                     CommandHandler('start', self.start, pass_user_data=True)
                 ],

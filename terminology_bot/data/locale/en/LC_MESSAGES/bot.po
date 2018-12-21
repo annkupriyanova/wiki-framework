@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2018-12-11 13:57+0300\n"
-"PO-Revision-Date: 2018-12-20 13:48+0300\n"
+"PO-Revision-Date: 2018-12-21 21:54+0300\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -79,11 +79,11 @@ msgstr ""
 
 #: bot.py:116
 msgid ""
-"Let's make the profile of the term \"%s\".\n"
-"Feel free to go back to the /menu and to the list of /terms."
+"Let's make the profile of the term \"%s\" %s%s.\n"
+"Feel free to go back to the /menu and to the list of /terms.\n"
 msgstr ""
-"Let’s make the profile of the term “%s”.\n"
-"Feel free to go back to the /menu and to the list of /terms."
+"Let's make the profile of the term \"%s\" %s%s.\n"
+"Feel free to go back to the /menu and to the list of /terms.\n"
 
 #: bot.py:127
 msgid "Please choose an index number of a term from the list above."
@@ -136,6 +136,18 @@ msgstr "Awesome!"
 #: bot.py:274 bot.py:290
 msgid "I'll remember this!"
 msgstr "I’ll remember this!"
+
+#: bot.py:387 bot.py:425
+msgid ""
+"List indices of the terms you meant, separating them with comma:\n"
+"%s"
+msgstr ""
+"List indices of the terms you meant, separating them with comma:\n"
+"%s"
+
+#: bot.py:450
+msgid "I will save your choice."
+msgstr "I will save your choice."
 
 #: bot.py:307
 msgid "Bye! I hope we can talk again some day."

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2018-12-11 13:57+0300\n"
+"POT-Creation-Date: 2018-12-21 21:14+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15,123 +15,133 @@ msgstr ""
 "Generated-By: pygettext.py 1.5\n"
 
 
-#: bot.py:27
+#: bot.py:45
 msgid "Add new term"
 msgstr ""
 
-#: bot.py:27
+#: bot.py:46
 msgid "Get list of terms"
 msgstr ""
 
-#: bot.py:28 bot.py:137
+#: bot.py:47 bot.py:199
 msgid "POS-tag"
 msgstr ""
 
-#: bot.py:28 bot.py:146
+#: bot.py:48 bot.py:206
 msgid "Description"
 msgstr ""
 
-#: bot.py:29 bot.py:151
+#: bot.py:49 bot.py:211
 msgid "Synonyms"
 msgstr ""
 
-#: bot.py:29 bot.py:156
+#: bot.py:50 bot.py:216
 msgid "Similar words"
 msgstr ""
 
-#: bot.py:30 bot.py:161
+#: bot.py:51 bot.py:221
 msgid "Image"
 msgstr ""
 
-#: bot.py:30 bot.py:166
+#: bot.py:52 bot.py:226
 msgid "Audio"
 msgstr ""
 
-#: bot.py:30 bot.py:171
+#: bot.py:53 bot.py:231
 msgid "Video"
 msgstr ""
 
-#: bot.py:56
+#: bot.py:97
 msgid "Hello! I am Terminology Bot. Send /cancel to stop talking to me."
 msgstr ""
 
-#: bot.py:65
+#: bot.py:108
 msgid "Type in the term."
 msgstr ""
 
-#: bot.py:80
+#: bot.py:125
 msgid "I'll remember this term."
 msgstr ""
 
-#: bot.py:94
+#: bot.py:143
 msgid "These are the terms I know:"
 msgstr ""
 
-#: bot.py:96
+#: bot.py:145
 msgid ""
 "\n"
 "Please, choose one of them."
 msgstr ""
 
-#: bot.py:116
+#: bot.py:178
 msgid ""
-"Let's make the profile of the term \"%s\".\n"
-"Feel free to go back to the /menu and to the list of /terms."
+"Let's make the profile of the term \"%s\" %s%s.\n"
+"Feel free to go back to the /menu and to the list of /terms.\n"
 msgstr ""
 
-#: bot.py:127
+#: bot.py:187 bot.py:455
 msgid "Please choose an index number of a term from the list above."
 msgstr ""
 
-#: bot.py:139
+#: bot.py:200
 msgid "Choose the part-of-speech tag for the term \"%s\"."
 msgstr ""
 
-#: bot.py:147
+#: bot.py:207
 msgid "Give a description to the term \"%s\"."
 msgstr ""
 
-#: bot.py:152
+#: bot.py:212
 msgid "List synonyms of the term \"%s\" separating them with comma."
 msgstr ""
 
-#: bot.py:157
+#: bot.py:217
 msgid "List words similar with the term \"%s\" separating them with comma."
 msgstr ""
 
-#: bot.py:162
+#: bot.py:222
 msgid "Let's upload an image for the term \"%s\"."
 msgstr ""
 
-#: bot.py:167
+#: bot.py:227
 msgid "Let's upload an audiofile for the term \"%s\"."
 msgstr ""
 
-#: bot.py:172
+#: bot.py:232
 msgid "Let's upload a video for the term \"%s\"."
 msgstr ""
 
-#: bot.py:177
+#: bot.py:237
 msgid "Feel free to choose."
 msgstr ""
 
-#: bot.py:192
+#: bot.py:256
 msgid "I see!"
 msgstr ""
 
-#: bot.py:206
+#: bot.py:273
 msgid "Good work!"
 msgstr ""
 
-#: bot.py:223 bot.py:240 bot.py:258
+#: bot.py:297 bot.py:325 bot.py:350
 msgid "Awesome!"
 msgstr ""
 
-#: bot.py:274 bot.py:290
+#: bot.py:371 bot.py:410
 msgid "I'll remember this!"
 msgstr ""
 
-#: bot.py:307
+#: bot.py:387 bot.py:425
+msgid ""
+"List indices of the terms you meant, separating them with comma:\n"
+"%s"
+msgstr ""
+
+#: bot.py:450
+msgid "I will save your choice."
+msgstr ""
+
+#: bot.py:475
 msgid "Bye! I hope we can talk again some day."
 msgstr ""
 

@@ -1,4 +1,5 @@
-from sqlalchemy import (create_engine, Column, String, Integer, Text, Enum, ForeignKey, Sequence)
+from sqlalchemy import (create_engine, Column, String, Integer, Text, Enum, ForeignKey, Sequence, Table)
+from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from config import get_config
@@ -22,36 +23,40 @@ class POSEnum(enum.Enum):
     adjective = _('adjective')
 
 
+Synonyms = Table('synonyms', Base.metadata,
+                 Column('term_id', Integer, ForeignKey('terms.id'), primary_key=True),
+                 Column('synonym_id', Integer, ForeignKey('terms.id'), primary_key=True))
+
+
+Similars = Table('similar_words', Base.metadata,
+                 Column('term_id', Integer, ForeignKey('terms.id'), primary_key=True),
+                 Column('similar_word_id', Integer, ForeignKey('terms.id'), primary_key=True))
+
+
 class Term(Base):
     __tablename__ = 'terms'
 
     id = Column(Integer, Sequence('terms_id_seq'), primary_key=True)
-    name = Column(String(256), nullable=False, unique=True)
+    name = Column(String(256), nullable=False)
     pos_tag = Column(Enum(POSEnum))
     description = Column(Text)
     image = Column(String(256))
     audiofile = Column(String(256))
     videofile = Column(String(256))
 
+    synonyms = relationship("Term", secondary=Synonyms,
+                            primaryjoin=Synonyms.c.term_id == id,
+                            secondaryjoin=Synonyms.c.synonym_id == id)
+
+    similars = relationship("Term", secondary=Similars,
+                            primaryjoin=Similars.c.term_id == id,
+                            secondaryjoin=Similars.c.similar_word_id == id)
+
     def __getitem__(self, key):
         return getattr(self, key)
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
-
-
-class Synonyms(Base):
-    __tablename__ = 'synonyms'
-
-    term_id = Column(Integer, ForeignKey(Term.id), primary_key=True)
-    synonym_id = Column(Integer, ForeignKey(Term.id), primary_key=True)
-
-
-class Similars(Base):
-    __tablename__ = 'similar_words'
-
-    term_id = Column(Integer, ForeignKey(Term.id), primary_key=True)
-    similar_word_id = Column(Integer, ForeignKey(Term.id), primary_key=True)
 
 
 class SQLAlchemyDBConnection(object):

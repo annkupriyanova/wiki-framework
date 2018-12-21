@@ -30,27 +30,73 @@ class TermCollection:
             term = db.session.query(Term).filter(Term.id == term_id).first()
 
             for key, val in dictionary.items():
-                term[key] = val
+                if term[key] and term[key] != val:
+                    new_term = Term(name=term.name)
+                    new_term[key] = val
+                    db.session.add(new_term)
+                else:
+                    term[key] = val
 
             db.session.commit()
 
-    def add_synonyms_similars(self, term_id, words, table='syn'):
+    def add_synonyms_similars(self, term_id, words, table='synonyms', clarification_ids=None):
+        s_words_to_clarify = []
+
         with SQLAlchemyDBConnection(db_string) as db:
+            db.session.expire_on_commit = False
+
             term = db.session.query(Term).filter(Term.id == term_id).first()
-            words = [w.lower() for w in words]
 
-            for word in words:
-                word_exists = db.session.query(exists().where(Term.name == word)).scalar()
+            if clarification_ids:
+                # this will be executed after user's clarification choice (in case of several s_words found in DB)
+                for s_word_id in clarification_ids:
+                    s_word = db.session.query(Term).filter(Term.id == s_word_id).first()
+                    if table == 'synonyms':
+                        term.synonyms.append(s_word)
+                        s_word.synonyms.append(term)
 
-                if not word_exists:
-                    db.session.add(Term(name=word))
-                    db.session.flush()
+                    elif table == 'similars':
+                        term.similars.append(s_word)
+                        s_word.similars.append(term)
+            else:
+                words = [w.lower() for w in words]
 
-                s_word = db.session.query(Term).filter(Term.name == word).first()
+                for word in words:
+                    word_exists = db.session.query(exists().where(Term.name == word)).scalar()
 
-                if table == 'syn':
-                    db.session.add(Synonyms(term_id=term.id, synonym_id=s_word.id))
-                elif table == 'sim':
-                    db.session.add(Similars(term_id=term.id, similar_word_id=s_word.id))
+                    if not word_exists:
+                        db.session.add(Term(name=word))
+                        db.session.flush()
+
+                    s_word_list = db.session.query(Term).filter(Term.name == word).all()
+
+                    if len(s_word_list) > 1:
+                        s_words_to_clarify.extend(s_word_list)
+                    else:
+                        if table == 'synonyms':
+                            term.synonyms.append(s_word_list[0])
+                            s_word_list[0].synonyms.append(term)
+
+                        elif table == 'similars':
+                            term.similars.append(s_word_list[0])
+                            s_word_list[0].similars.append(term)
 
             db.session.commit()
+
+        if s_words_to_clarify:
+            # return list of s_words  for user's clarification choice
+            return s_words_to_clarify
+        else:
+            return None
+
+    def get_synonyms(self, term_id):
+        with SQLAlchemyDBConnection(db_string) as db:
+            db.session.expire_on_commit = False
+            term = db.session.query(Term).filter(Term.id == term_id).first()
+            return term.synonyms
+
+    def get_similars(self, term_id):
+        with SQLAlchemyDBConnection(db_string) as db:
+            db.session.expire_on_commit = False
+            term = db.session.query(Term).filter(Term.id == term_id).first()
+            return term.similars
