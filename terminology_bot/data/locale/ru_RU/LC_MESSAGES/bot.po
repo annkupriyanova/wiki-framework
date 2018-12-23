@@ -1,0 +1,154 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2018-12-11 13:57+0300\n"
+"PO-Revision-Date: 2018-12-20 13:47+0300\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+"X-Generator: Poedit 2.2\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"Language: ru_RU\n"
+
+#: bot.py:27
+msgid "Add new term"
+msgstr "Добавить новый термин"
+
+#: bot.py:27
+msgid "Get list of terms"
+msgstr "Список терминов"
+
+#: bot.py:28 bot.py:137
+msgid "POS-tag"
+msgstr "Часть речи"
+
+#: bot.py:28 bot.py:146
+msgid "Description"
+msgstr "Описание"
+
+#: bot.py:29 bot.py:151
+msgid "Synonyms"
+msgstr "Синонимы"
+
+#: bot.py:29 bot.py:156
+msgid "Similar words"
+msgstr "Похожие слова"
+
+#: bot.py:30 bot.py:161
+msgid "Image"
+msgstr "Изображение"
+
+#: bot.py:30 bot.py:166
+msgid "Audio"
+msgstr "Аудиофайл"
+
+#: bot.py:30 bot.py:171
+msgid "Video"
+msgstr "Видеофайл"
+
+#: bot.py:56
+msgid "Hello! I am Terminology Bot. Send /cancel to stop talking to me."
+msgstr "Привет! Меня зовут Terminology Bot. Отправь команду /cancel, чтобы завершить разговор."
+
+#: bot.py:65
+msgid "Type in the term."
+msgstr "Введи термин."
+
+#: bot.py:80
+msgid "I'll remember this term."
+msgstr "Я запомню этот термин."
+
+#: bot.py:94
+msgid "These are the terms I know:"
+msgstr "Вот термины, которые я знаю:"
+
+#: bot.py:96
+msgid ""
+"\n"
+"Please, choose one of them."
+msgstr ""
+"\n"
+"Пожалуйста, выбери один из них."
+
+#: bot.py:116
+msgid ""
+"Let's make the profile of the term \"%s\".\n"
+"Feel free to go back to the /menu and to the list of /terms."
+msgstr ""
+"Давай заполним профиль термина “%s”.\n"
+"Смело возвращайся в /menu или к списку терминов /terms."
+
+#: bot.py:127
+msgid "Please choose an index number of a term from the list above."
+msgstr "Пожалуйста, выбери номер термина из списка."
+
+#: bot.py:139
+msgid "Choose the part-of-speech tag for the term \"%s\"."
+msgstr "Выбери часть речи для термина ”%s”."
+
+#: bot.py:147
+msgid "Give a description to the term \"%s\"."
+msgstr "Дай определение термину “%s”."
+
+#: bot.py:152
+msgid "List synonyms of the term \"%s\" separating them with comma."
+msgstr "Перечисли через запятую синонимы термина “%s”."
+
+#: bot.py:157
+msgid "List words similar with the term \"%s\" separating them with comma."
+msgstr "Перечисли через запятую слова похожие на термин “%s”."
+
+#: bot.py:162
+msgid "Let's upload an image for the term \"%s\"."
+msgstr "Давай загрузим изображение к термину “%s”."
+
+#: bot.py:167
+msgid "Let's upload an audiofile for the term \"%s\"."
+msgstr "Давай загрузим аудиофайл к термину “%s”."
+
+#: bot.py:172
+msgid "Let's upload a video for the term \"%s\"."
+msgstr "Давай загрузим видеофайл к термину “%s”."
+
+#: bot.py:177
+msgid "Feel free to choose."
+msgstr "Не стесняйся, выбирай!"
+
+#: bot.py:192
+msgid "I see!"
+msgstr "Я понял."
+
+#: bot.py:206
+msgid "Good work!"
+msgstr "Отличная работа!"
+
+#: bot.py:223 bot.py:240 bot.py:258
+msgid "Awesome!"
+msgstr "Великолепно!"
+
+#: bot.py:274 bot.py:290
+msgid "I'll remember this!"
+msgstr "Я запомню это."
+
+#: bot.py:307
+msgid "Bye! I hope we can talk again some day."
+msgstr "До свидания!"
+
+#: database.py:20
+msgid "noun"
+msgstr "существительное"
+
+#: database.py:21
+msgid "verb"
+msgstr "глагол"
+
+#: database.py:22
+msgid "adjective"
+msgstr "прилагательное"
